@@ -421,6 +421,12 @@ startButton.addEventListener('click', () => {
   modalToOpen.style.display = "block";
 });
 
+let difficultyButton = document.getElementById('difficulty-button');
+difficultyButton.addEventListener('click', () => {
+  modalToOpen = document.getElementById('difficulty-modal');
+  modalToOpen.style.display = "block";
+});
+
 let imageOptions = document.getElementsByClassName("modal-selections");
 
 for (let option of imageOptions) {
