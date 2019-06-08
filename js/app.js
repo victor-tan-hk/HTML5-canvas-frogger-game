@@ -13,6 +13,9 @@ let generateEnemyPeriod = 2000;
 let fastestSpeed = 10;
 let slowestSpeed = 5;
 
+// default difficult level: EASY
+let currentDifficulty = "EASY";
+
 // period for generating random items (gems, etc)
 const generateItemPeriod = 2000;
 
@@ -36,11 +39,26 @@ const unitVerticalMovement = heightFixedObject - heightLag;
 const playerStartX = (widthFixedObject * 2); // x-pos for the 3rd tile
 const playerStartY = startOfRowsYPos+( (totalRows-1) *(heightFixedObject-heightLag)); // y-pos for last row
 
+// coordinates for the 3 main text display items
+const lifeTextXPos = 350;
+const lifeTextYPos = 50;
+
+const difficultyTextXPos = 200;
+const difficultyTextYPos = 50;
+
+const scoreTextXPos = 20;
+const scoreTextYPos = 50;
 
 // the 4 different kinds of items that will be generated in the game play area
 const specialItemTypes = ['Gem Blue','Gem Green','Gem Orange','Heart'];
 
+// default starting value for lifes left and score
+let lifes = 3;
+let score = 0;
+
 let defaultIconChoice = 'images/char-boy.png';
+
+let initialStartOfGame = true;
 
 
 // This is the base class for all the objects to be rendered in the game
@@ -206,7 +224,16 @@ const mainGameArea = {
   updateGameArea : function() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
- /*    Draw the stationary background objects first so that everything else
+    // Provide the text for the lives left, score and difficulty level
+    context.textAlign = "start";
+    context.fillStyle = 'black';
+    context.font = "30px Helvetica";
+    context.fillText("Lives : " + lifes, lifeTextXPos, lifeTextYPos);
+    context.fillText(currentDifficulty, difficultyTextXPos, difficultyTextYPos);
+    context.font = "30px Helvetica";
+    context.fillText("Score : " + score, scoreTextXPos, scoreTextYPos);
+
+    /*    Draw the stationary background objects first so that everything else
     will subsequently appear over them */
     for (let component of this.stationaryComponents) 
       component.updatePos();
