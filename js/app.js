@@ -314,11 +314,38 @@ const mainGameArea = {
 
   },
 
-
-
-  doEndGame: function(msg) {
-    console.log(msg);
+/*   Clearing all interval timers ensures that all
+  object movement freezes at the end of the game. Also
+  necessary housekeeping when restarting a game in the middle */
+  clearAllTimers : function() {
+    console.log("Clearing all interval timers");
+    if (this.generateEnemyInterval)
+      clearInterval(this.generateEnemyInterval);
+    if (this.updateInterval)
+      clearInterval(this.updateInterval);
+    if (this.generateItemInterval)
+      clearInterval(this.generateItemInterval);
   },
+
+/*     Wait 0.5 seconds before resetting the interval timers
+    to allow the score to refresh and player to be reset back to 
+    bottom of game play area, then display the appropriate message  
+ */
+doEndGame: function(msg) {
+
+  setTimeout(() => {
+    this.clearAllTimers();
+    context.font = "50px Comic Sans MS";
+    if (msg === 'GAME OVER')
+      context.fillStyle = "red";
+    else
+      context.fillStyle = "blue";
+    context.textAlign = "center";
+    context.fillText(msg, canvas.width/2, canvas.height/2); 
+  }
+  ,500);
+},
+
 
 
 
