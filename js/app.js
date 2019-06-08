@@ -105,11 +105,20 @@ player functionality and also makes calls to the base Component class */
 
 class Player extends Component {
 
+  // powerMode keeps track of whether the player is in power mode
   constructor(xPos, yPos, width, height, imgName) {
     super(xPos, yPos, width, height, imgName);
+    this.powerMode = false;
   }
 
+  /*  Display the appropriate background orange rectangle to provide 
+    visual indication that power mode is active
+  */
   updatePos() {
+    if (this.powerMode) {
+      context.fillStyle = "orange";
+      context.fillRect(this.xPos, this.yPos+30, widthFixedObject, heightFixedObject - heightLag);
+    }
     super.updatePos();
   }
 
@@ -266,7 +275,15 @@ const mainGameArea = {
             lifes++;
           // Increment score if it is a green gem  
           else if (currentSpecialItem.itemName == 'Gem Green')
-            score++;            
+            score++;
+          // turn on player power mode for a specific duration of time  
+          else if (currentSpecialItem.itemName =='Gem Orange') {
+            // if already power on, simply ignore 
+            if (!player.powerMode) {
+              player.powerMode = true;  
+              setTimeout(() => {player.powerMode = false}, generateItemPeriod);
+            }
+          }                        
 
           // remove the item
           currentSpecialItem = null;
