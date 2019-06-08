@@ -20,6 +20,12 @@ const heightLag = 50;
 const unitHorizontalMovement = widthFixedObject;
 const unitVerticalMovement = heightFixedObject - heightLag;
 
+// player will initially start on 3rd tile on the last row
+const playerStartX = (widthFixedObject * 2); // x-pos for the 3rd tile
+const playerStartY = startOfRowsYPos+( (totalRows-1) *(heightFixedObject-heightLag)); // y-pos for last row
+
+let defaultIconChoice = 'images/char-boy.png';
+
 
 // This is the base class for all the objects to be rendered in the game
 
@@ -38,6 +44,15 @@ class Component {
       context.drawImage(this.img, this.xPos, this.yPos, this.width, this.height);
     }
   
+}
+
+/* The Player class adds a few additional methods and properties specific to 
+player functionality and also makes calls to the base Component class */
+
+class Player extends Component {
+
+
+
 }
 
 
@@ -73,6 +88,9 @@ const mainGameArea = {
     will subsequently appear over them */
     for (let component of this.stationaryComponents) 
       component.updatePos();
+
+        // Next draw the player
+      player.updatePos();  
   },
 
 
@@ -92,6 +110,12 @@ const mainGameArea = {
   },
 }
 
+
+/* Generate a new player object at the default starting position with the default icon. 
+Only keep one player object active throughout subsequent restarts to avoid problems
+with bound methods on a previous object instance
+ */
+let player = new Player(playerStartX, playerStartY, widthFixedObject,heightFixedObject,defaultIconChoice);
 
 // Create the first row of water blocks
 mainGameArea.generateFixedObjects(0,startOfRowsYPos,numFixedObjects,1,widthFixedObject, heightFixedObject,'images/water-block.png');
