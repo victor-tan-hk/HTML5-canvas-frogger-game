@@ -13,6 +13,9 @@ let generateEnemyPeriod = 2000;
 let fastestSpeed = 10;
 let slowestSpeed = 5;
 
+// period for generating random items (gems, etc)
+const generateItemPeriod = 2000;
+
 
 // constants for generating background icons
 const widthHeightFactor = 1.7;
@@ -32,6 +35,10 @@ const unitVerticalMovement = heightFixedObject - heightLag;
 // player will initially start on 3rd tile on the last row
 const playerStartX = (widthFixedObject * 2); // x-pos for the 3rd tile
 const playerStartY = startOfRowsYPos+( (totalRows-1) *(heightFixedObject-heightLag)); // y-pos for last row
+
+
+// the 4 different kinds of items that will be generated in the game play area
+const specialItemTypes = ['Gem Blue','Gem Green','Gem Orange','Heart'];
 
 let defaultIconChoice = 'images/char-boy.png';
 
@@ -143,6 +150,20 @@ class Enemy extends Component {
 
 }
 
+/* The SpecialItem class adds an additional property that allows it to be 
+identified so that appropriate action can be taken when the player collides with 
+it
+*/
+
+class SpecialItem extends Component {
+
+  constructor(xPos, yPos, width, height, imgName,itemName) {
+    super(xPos, yPos, width, height, imgName);
+    this.itemName = itemName;
+  }
+
+}
+
   /* This is the main object that keeps all the methods and variables relevant for
 game play
  */
@@ -150,7 +171,7 @@ const mainGameArea = {
 
   updateInterval : null,
   generateEnemyInterval: null,
-
+  generateItemInterval: null,
   stationaryComponents : [],
   enemies : [],
 
@@ -176,7 +197,9 @@ const mainGameArea = {
     let boundGenerateEnemies = mainGameArea.generateEnemies.bind(mainGameArea);
     this.generateEnemyInterval = setInterval(boundGenerateEnemies, generateEnemyPeriod);
 
-
+    // Interval timer for generating items periodically
+    let boundGenerateItems = mainGameArea.generateItems.bind(mainGameArea);
+    this.generateItemInterval = setInterval(boundGenerateItems, generateItemPeriod);
 
   },
 
@@ -195,14 +218,18 @@ const mainGameArea = {
       for (let pos = 0; pos < this.enemies.length; pos++) {
         this.enemies[pos].updatePos();
 
-      // If the enemy collides with the player
-      if (this.enemies[pos].crashWith(player)) {
-        console.log("player died");
-        player.resetPosition();        
+        // If the enemy collides with the player
+        if (this.enemies[pos].crashWith(player)) {
+          console.log("player died");
+          player.resetPosition();
+        }        
+      }
+
+      if (currentSpecialItem) {
+        currentSpecialItem.updatePos();
       }
 
 
-      }    
   },
 
 
@@ -230,6 +257,33 @@ const mainGameArea = {
     this.enemies.push(new Enemy(0, enemyYPos, widthFixedObject, heightFixedObject, 'images/enemy-bug.png',enemySpeed));
   }, 
 
+  /*   Randomly generate an item anywhere in the stony path area. 
+  This can either be : 'Gem Blue','Gem Green','Gem Orange' or 'Heart'
+  */
+ generateItems: function() {
+  const scaleFactor = 0.7;
+  const xOffset = 10;
+  const yOffset = 8;
+  
+  // returns a random integer from 1 to 4
+  const randomRow = Math.floor(Math.random() * 4) + 1;  
+  
+  // returns a random integer from 0 to numFixedObjects-1
+  const randomColumn = Math.floor(Math.random() * numFixedObjects);
+
+  // returns a random integer from 0 to specialItemTypes.length-1
+  const randomItem = Math.floor(Math.random() * specialItemTypes.length);
+  // const randomItem = 2;
+
+  const itemYPos = startOfRowsYPos+(randomRow *(heightFixedObject-heightLag))+yOffset;
+  const itemXPos = (randomColumn*widthFixedObject)+xOffset;
+  currentSpecialItem = new SpecialItem(itemXPos, itemYPos, widthFixedObject*scaleFactor, heightFixedObject*scaleFactor, 'images/'+specialItemTypes[randomItem]+'.png',specialItemTypes[randomItem]);
+
+  // console.log(specialItemTypes[randomItem]);
+
+  },
+
+
 
   doEndGame: function(msg) {
     console.log(msg);
@@ -245,6 +299,8 @@ Only keep one player object active throughout subsequent restarts to avoid probl
 with bound methods on a previous object instance
  */
 let player = new Player(playerStartX, playerStartY, widthFixedObject,heightFixedObject,defaultIconChoice);
+let currentSpecialItem = null; // only one special item at any time
+
 
 // Create the first row of water blocks
 mainGameArea.generateFixedObjects(0,startOfRowsYPos,numFixedObjects,1,widthFixedObject, heightFixedObject,'images/water-block.png');
