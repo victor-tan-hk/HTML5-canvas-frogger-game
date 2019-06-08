@@ -13,6 +13,12 @@ let generateEnemyPeriod = 2000;
 let fastestSpeed = 10;
 let slowestSpeed = 5;
 
+// default difficult level: EASY
+let currentDifficulty = "EASY";
+
+// period for generating random items (gems, etc)
+const generateItemPeriod = 3000;
+
 
 // constants for generating background icons
 const widthHeightFactor = 1.7;
@@ -33,7 +39,26 @@ const unitVerticalMovement = heightFixedObject - heightLag;
 const playerStartX = (widthFixedObject * 2); // x-pos for the 3rd tile
 const playerStartY = startOfRowsYPos+( (totalRows-1) *(heightFixedObject-heightLag)); // y-pos for last row
 
+// coordinates for the 3 main text display items
+const lifeTextXPos = 350;
+const lifeTextYPos = 50;
+
+const difficultyTextXPos = 200;
+const difficultyTextYPos = 50;
+
+const scoreTextXPos = 20;
+const scoreTextYPos = 50;
+
+// the 4 different kinds of items that will be generated in the game play area
+const specialItemTypes = ['Gem Blue','Gem Green','Gem Orange','Heart'];
+
+// default starting value for lifes left and score
+let lifes = 3;
+let score = 0;
+
 let defaultIconChoice = 'images/char-boy.png';
+
+let initialStartOfGame = true;
 
 
 // This is the base class for all the objects to be rendered in the game
@@ -80,11 +105,20 @@ player functionality and also makes calls to the base Component class */
 
 class Player extends Component {
 
+  // powerMode keeps track of whether the player is in power mode
   constructor(xPos, yPos, width, height, imgName) {
     super(xPos, yPos, width, height, imgName);
+    this.powerMode = false;
   }
 
+  /*  Display the appropriate background orange rectangle to provide 
+    visual indication that power mode is active
+  */
   updatePos() {
+    if (this.powerMode) {
+      context.fillStyle = "orange";
+      context.fillRect(this.xPos, this.yPos+30, widthFixedObject, heightFixedObject - heightLag);
+    }
     super.updatePos();
   }
 
@@ -143,6 +177,20 @@ class Enemy extends Component {
 
 }
 
+/* The SpecialItem class adds an additional property that allows it to be 
+identified so that appropriate action can be taken when the player collides with 
+it
+*/
+
+class SpecialItem extends Component {
+
+  constructor(xPos, yPos, width, height, imgName,itemName) {
+    super(xPos, yPos, width, height, imgName);
+    this.itemName = itemName;
+  }
+
+}
+
   /* This is the main object that keeps all the methods and variables relevant for
 game play
  */
@@ -150,7 +198,7 @@ const mainGameArea = {
 
   updateInterval : null,
   generateEnemyInterval: null,
-
+  generateItemInterval: null,
   stationaryComponents : [],
   enemies : [],
 
@@ -176,14 +224,25 @@ const mainGameArea = {
     let boundGenerateEnemies = mainGameArea.generateEnemies.bind(mainGameArea);
     this.generateEnemyInterval = setInterval(boundGenerateEnemies, generateEnemyPeriod);
 
-
+    // Interval timer for generating items periodically
+    let boundGenerateItems = mainGameArea.generateItems.bind(mainGameArea);
+    this.generateItemInterval = setInterval(boundGenerateItems, generateItemPeriod);
 
   },
 
   updateGameArea : function() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
- /*    Draw the stationary background objects first so that everything else
+    // Provide the text for the lives left, score and difficulty level
+    context.textAlign = "start";
+    context.fillStyle = 'black';
+    context.font = "30px Helvetica";
+    context.fillText("Lives : " + lifes, lifeTextXPos, lifeTextYPos);
+    context.fillText(currentDifficulty, difficultyTextXPos, difficultyTextYPos);
+    context.font = "30px Helvetica";
+    context.fillText("Score : " + score, scoreTextXPos, scoreTextYPos);
+
+    /*    Draw the stationary background objects first so that everything else
     will subsequently appear over them */
     for (let component of this.stationaryComponents) 
       component.updatePos();
@@ -195,14 +254,74 @@ const mainGameArea = {
       for (let pos = 0; pos < this.enemies.length; pos++) {
         this.enemies[pos].updatePos();
 
-      // If the enemy collides with the player
-      if (this.enemies[pos].crashWith(player)) {
-        console.log("player died");
-        player.resetPosition();        
+        // If the enemy collides with the player
+        if (this.enemies[pos].crashWith(player)) {
+
+          // If the player is in power mode, increase score
+          // and remove the enemy
+          if (player.powerMode) {
+            score++;
+            this.enemies.splice(pos,1);
+          } else {          
+
+            console.log("player died");
+            lifes--;
+            player.resetPosition();
+            // when lives drop to 0, indicate game over
+            if (lifes < 1)
+              this.doEndGame("GAME OVER");
+          }
+          // basic garbage collection to ensure that enemies no longer
+          // visible in the game play area are removed from the array
+        } else if (this.enemies[pos].xPos > canvas.width+200) {
+          this.enemies.splice(pos,1);
+        }
+      }
+
+      if (currentSpecialItem) {
+        currentSpecialItem.updatePos();
+        // The action to be taken when the player collides with 
+        // a special item depends on the item itself
+        if (currentSpecialItem.crashWith(player)) {
+          // Increment lives if it is a heart
+          if (currentSpecialItem.itemName == 'Heart')
+            lifes++;
+          // Increment score if it is a green gem  
+          else if (currentSpecialItem.itemName == 'Gem Green')
+            score++;
+          // turn on player power mode for a specific duration of time  
+          else if (currentSpecialItem.itemName =='Gem Orange') {
+            // if already power on, simply ignore 
+            if (!player.powerMode) {
+              player.powerMode = true;  
+              setTimeout(() => {player.powerMode = false}, generateItemPeriod);
+            }
+          }                        
+          // remove all enemies in the game play area
+          // increment the player score by the number of enemies removed
+          else if (currentSpecialItem.itemName == 'Gem Blue') {
+            //verify how many enemies are still in the game play area
+            let enemiesKilled = 0;
+            for (let enemy of this.enemies) {
+              // We dont count an enemy that is outside the game play area
+              // as a "kill"
+              if (enemy.xPos < canvas.width) {
+                enemiesKilled++;
+              }
+            }
+            score += enemiesKilled;
+            this.enemies = [];
+        }
+
+
+
+          // remove the item
+          currentSpecialItem = null;
+        }
+
       }
 
 
-      }    
   },
 
 
@@ -230,10 +349,64 @@ const mainGameArea = {
     this.enemies.push(new Enemy(0, enemyYPos, widthFixedObject, heightFixedObject, 'images/enemy-bug.png',enemySpeed));
   }, 
 
+  /*   Randomly generate an item anywhere in the stony path area. 
+  This can either be : 'Gem Blue','Gem Green','Gem Orange' or 'Heart'
+  */
+ generateItems: function() {
+  const scaleFactor = 0.7;
+  const xOffset = 10;
+  const yOffset = 8;
+  
+  // returns a random integer from 1 to 4
+  const randomRow = Math.floor(Math.random() * 4) + 1;  
+  
+  // returns a random integer from 0 to numFixedObjects-1
+  const randomColumn = Math.floor(Math.random() * numFixedObjects);
 
-  doEndGame: function(msg) {
-    console.log(msg);
+  // returns a random integer from 0 to specialItemTypes.length-1
+  const randomItem = Math.floor(Math.random() * specialItemTypes.length);
+  // const randomItem = 2;
+
+  const itemYPos = startOfRowsYPos+(randomRow *(heightFixedObject-heightLag))+yOffset;
+  const itemXPos = (randomColumn*widthFixedObject)+xOffset;
+  currentSpecialItem = new SpecialItem(itemXPos, itemYPos, widthFixedObject*scaleFactor, heightFixedObject*scaleFactor, 'images/'+specialItemTypes[randomItem]+'.png',specialItemTypes[randomItem]);
+
+  // console.log(specialItemTypes[randomItem]);
+
   },
+
+/*   Clearing all interval timers ensures that all
+  object movement freezes at the end of the game. Also
+  necessary housekeeping when restarting a game in the middle */
+  clearAllTimers : function() {
+    console.log("Clearing all interval timers");
+    if (this.generateEnemyInterval)
+      clearInterval(this.generateEnemyInterval);
+    if (this.updateInterval)
+      clearInterval(this.updateInterval);
+    if (this.generateItemInterval)
+      clearInterval(this.generateItemInterval);
+  },
+
+/*     Wait 0.5 seconds before resetting the interval timers
+    to allow the score to refresh and player to be reset back to 
+    bottom of game play area, then display the appropriate message  
+ */
+doEndGame: function(msg) {
+
+  setTimeout(() => {
+    this.clearAllTimers();
+    context.font = "50px Comic Sans MS";
+    if (msg === 'GAME OVER')
+      context.fillStyle = "red";
+    else
+      context.fillStyle = "blue";
+    context.textAlign = "center";
+    context.fillText(msg, canvas.width/2, canvas.height/2); 
+  }
+  ,500);
+},
+
 
 
 
@@ -245,6 +418,8 @@ Only keep one player object active throughout subsequent restarts to avoid probl
 with bound methods on a previous object instance
  */
 let player = new Player(playerStartX, playerStartY, widthFixedObject,heightFixedObject,defaultIconChoice);
+let currentSpecialItem = null; // only one special item at any time
+
 
 // Create the first row of water blocks
 mainGameArea.generateFixedObjects(0,startOfRowsYPos,numFixedObjects,1,widthFixedObject, heightFixedObject,'images/water-block.png');
