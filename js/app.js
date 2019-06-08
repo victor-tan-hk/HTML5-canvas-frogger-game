@@ -248,7 +248,11 @@ const mainGameArea = {
         // If the enemy collides with the player
         if (this.enemies[pos].crashWith(player)) {
           console.log("player died");
+          lifes--;
           player.resetPosition();
+          // when lives drop to 0, indicate game over
+          if (lifes < 1)
+            this.doEndGame("GAME OVER"); 
         }        
       }
 
