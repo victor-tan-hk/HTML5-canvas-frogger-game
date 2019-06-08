@@ -270,8 +270,12 @@ const mainGameArea = {
             // when lives drop to 0, indicate game over
             if (lifes < 1)
               this.doEndGame("GAME OVER");
-          } 
-        }        
+          }
+          // basic garbage collection to ensure that enemies no longer
+          // visible in the game play area are removed from the array
+        } else if (this.enemies[pos].xPos > canvas.width+200) {
+          this.enemies.splice(pos,1);
+        }
       }
 
       if (currentSpecialItem) {
