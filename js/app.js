@@ -17,7 +17,7 @@ let slowestSpeed = 5;
 let currentDifficulty = "EASY";
 
 // period for generating random items (gems, etc)
-const generateItemPeriod = 2000;
+const generateItemPeriod = 4000;
 
 
 // constants for generating background icons
@@ -256,12 +256,21 @@ const mainGameArea = {
 
         // If the enemy collides with the player
         if (this.enemies[pos].crashWith(player)) {
-          console.log("player died");
-          lifes--;
-          player.resetPosition();
-          // when lives drop to 0, indicate game over
-          if (lifes < 1)
-            this.doEndGame("GAME OVER"); 
+
+          // If the player is in power mode, increase score
+          // and remove the enemy
+          if (player.powerMode) {
+            score++;
+            this.enemies.splice(pos,1);
+          } else {          
+
+            console.log("player died");
+            lifes--;
+            player.resetPosition();
+            // when lives drop to 0, indicate game over
+            if (lifes < 1)
+              this.doEndGame("GAME OVER");
+          } 
         }        
       }
 
