@@ -51,7 +51,49 @@ player functionality and also makes calls to the base Component class */
 
 class Player extends Component {
 
+  constructor(xPos, yPos, width, height, imgName) {
+    super(xPos, yPos, width, height, imgName);
+  }
 
+  updatePos() {
+    super.updatePos();
+  }
+
+  move(e) {
+
+    //Move the player in all 4 directions in accordance to arrow key presses 
+
+    if(e.key == "Right" || e.key == "ArrowRight") {
+      this.xPos += unitHorizontalMovement;
+      // Ensure that player does not move beyond the right boundary of the game area
+      const rightBoundary = ((numFixedObjects-1) * widthFixedObject);
+      if (this.xPos > rightBoundary) this.xPos = rightBoundary;
+    } else if(e.key == "Left" || e.key == "ArrowLeft") {
+      this.xPos -= unitHorizontalMovement;
+      // Ensure that player does not move beyond the left boundary of the game area
+      const leftBoundary = 0;
+      if (this.xPos < leftBoundary) this.xPos = 0;
+    } else if (e.key == "Down" || e.key == "ArrowDown") {
+      this.yPos += unitVerticalMovement;
+      // Ensure that player does not move below the bottom boundary of the game area
+      const bottomBoundary =  startOfRowsYPos + (totalRows-1) * (heightFixedObject - heightLag);
+      if (this.yPos > bottomBoundary) this.yPos = bottomBoundary;
+    } else if (e.key == "Up" || e.key == "ArrowUp") {
+      this.yPos -= unitVerticalMovement;
+      // Indicate end of game if player reaches the top boundary
+      if (this.yPos < startOfRowsYPos+heightFixedObject-heightLag) {
+        this.resetPosition();
+        mainGameArea.doEndGame("YOU WIN !");
+      }
+    }  
+    console.log("Player - x : " + this.xPos + " y : " + this.yPos);
+  }
+
+  // set the player back to the starting position of the game
+  resetPosition() {
+    this.xPos = playerStartX;
+    this.yPos = playerStartY;
+  }
 
 }
 
@@ -74,9 +116,14 @@ const mainGameArea = {
     // need to bind function before calling as addEventListener and setInterval  
     // automatically resets this to undefined
 
+    let boundPlayerMove = player.move.bind(player);
+    document.addEventListener("keydown", boundPlayerMove, false);
+
     // Interval timer for refreshing main game play area
     let boundUpdateGameArea = mainGameArea.updateGameArea.bind(mainGameArea);
     this.updateInterval = setInterval(boundUpdateGameArea, refreshPeriod);
+
+
 
 
   },
@@ -108,6 +155,14 @@ const mainGameArea = {
         currentXPos = startXPos;
     }
   },
+
+
+  doEndGame: function(msg) {
+    console.log(msg);
+  },
+
+
+
 }
 
 
