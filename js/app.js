@@ -388,29 +388,40 @@ const mainGameArea = {
       clearInterval(this.generateItemInterval);
   },
 
-/*     Wait 0.5 seconds before resetting the interval timers
-    to allow the score to refresh and player to be reset back to 
-    bottom of game play area, then display the appropriate message  
- */
-doEndGame: function(msg) {
+  /*     Wait 0.5 seconds before resetting the interval timers
+      to allow the score to refresh and player to be reset back to 
+      bottom of game play area, then display the appropriate message  
+  */
+  doEndGame: function(msg) {
 
-  setTimeout(() => {
-    this.clearAllTimers();
-    context.font = "50px Comic Sans MS";
-    if (msg === 'GAME OVER')
-      context.fillStyle = "red";
-    else
-      context.fillStyle = "blue";
-    context.textAlign = "center";
-    context.fillText(msg, canvas.width/2, canvas.height/2); 
-  }
-  ,500);
-},
-
-
-
+    setTimeout(() => {
+      this.clearAllTimers();
+      context.font = "50px Comic Sans MS";
+      if (msg === 'GAME OVER')
+        context.fillStyle = "red";
+      else
+        context.fillStyle = "blue";
+      context.textAlign = "center";
+      context.fillText(msg, canvas.width/2, canvas.height/2); 
+    }
+    ,500);
+  },
 
 }
+
+let modalToOpen = null;
+
+// register and implement event listeners for both the start and difficulty
+// buttons so that the appropriate modal box is displayed
+
+let startButton = document.getElementById('start-button');
+startButton.addEventListener('click', () => {
+  startButton.innerHTML = 'Restart';
+  modalToOpen = document.getElementById('icons-modal');
+  modalToOpen.style.display = "block";
+});
+
+
 
 
 /* Generate a new player object at the default starting position with the default icon. 
