@@ -5,20 +5,30 @@ const context = canvas.getContext("2d");
 // period for refreshing the game play area
 const refreshPeriod = 50;
 
-// period for generating enemies
-let generateEnemyPeriod = 2000;
+// period for generating random enemies
+// different values for different difficulty levels
+const generateEnemyPeriodEasy = 7000;
+const generateEnemyPeriodHard = 2000;
+const generateEnemyPeriodInsane = 500;
+let generateEnemyPeriod = generateEnemyPeriodEasy;
 
 
 // fastest and slowest enemy speed
-let fastestSpeed = 10;
-let slowestSpeed = 5;
+// different values for different difficulty levels
+const fastestSpeedEasy = 3;
+const slowestSpeedEasy = 1;
+const fastestSpeedHard = 10;
+const slowestSpeedHard = 5;
+const fastestSpeedInsane = 20;
+const slowestSpeedInsane = 10;
+let fastestSpeed = fastestSpeedEasy;
+let slowestSpeed = slowestSpeedEasy;
 
 // default difficult level: EASY
 let currentDifficulty = "EASY";
 
 // period for generating random items (gems, etc)
 const generateItemPeriod = 3000;
-
 
 // constants for generating background icons
 const widthHeightFactor = 1.7;
@@ -210,11 +220,27 @@ const mainGameArea = {
 
   start : function() {
 
-    // need to bind function before calling as addEventListener and setInterval  
-    // automatically resets this to undefined
+      // need to bind function before calling as addEventListener and setInterval  
+      // automatically resets this to undefined
 
-    let boundPlayerMove = player.move.bind(player);
-    document.addEventListener("keydown", boundPlayerMove, false);
+    // To ensure that there is no subsequent rebinding if game is restarted
+    if (initialStartOfGame) {
+      initialStartOfGame = false;
+      let boundPlayerMove = player.move.bind(player);
+      document.addEventListener("keydown", boundPlayerMove, false);
+    } else {
+      // This is used to reset the relevant game variables and timers
+      // in case the game is restarted in the middle of play
+      if (this.enemies.length > 0)
+        this.enemies = [];
+
+      lifes = 3;
+      score = 0;
+      this.clearAllTimers();
+      player.resetPosition();
+      player.powerMode = false;
+      currentSpecialItem = null;
+    }
 
     // Interval timer for refreshing main game play area
     let boundUpdateGameArea = mainGameArea.updateGameArea.bind(mainGameArea);
@@ -388,29 +414,88 @@ const mainGameArea = {
       clearInterval(this.generateItemInterval);
   },
 
-/*     Wait 0.5 seconds before resetting the interval timers
-    to allow the score to refresh and player to be reset back to 
-    bottom of game play area, then display the appropriate message  
- */
-doEndGame: function(msg) {
+  /*     Wait 0.5 seconds before resetting the interval timers
+      to allow the score to refresh and player to be reset back to 
+      bottom of game play area, then display the appropriate message  
+  */
+  doEndGame: function(msg) {
 
-  setTimeout(() => {
-    this.clearAllTimers();
-    context.font = "50px Comic Sans MS";
-    if (msg === 'GAME OVER')
-      context.fillStyle = "red";
-    else
-      context.fillStyle = "blue";
-    context.textAlign = "center";
-    context.fillText(msg, canvas.width/2, canvas.height/2); 
-  }
-  ,500);
-},
-
-
-
+    setTimeout(() => {
+      this.clearAllTimers();
+      context.font = "50px Comic Sans MS";
+      if (msg === 'GAME OVER')
+        context.fillStyle = "red";
+      else
+        context.fillStyle = "blue";
+      context.textAlign = "center";
+      context.fillText(msg, canvas.width/2, canvas.height/2); 
+    }
+    ,500);
+  },
 
 }
+
+let modalToOpen = null;
+
+// register and implement event listeners for both the start and difficulty
+// buttons so that the appropriate modal box is displayed
+
+let startButton = document.getElementById('start-button');
+startButton.addEventListener('click', () => {
+  startButton.innerHTML = 'Restart';
+  modalToOpen = document.getElementById('icons-modal');
+  modalToOpen.style.display = "block";
+});
+
+let difficultyButton = document.getElementById('difficulty-button');
+difficultyButton.addEventListener('click', () => {
+  modalToOpen = document.getElementById('difficulty-modal');
+  modalToOpen.style.display = "block";
+});
+
+let imageOptions = document.getElementsByClassName("modal-selections");
+
+for (let option of imageOptions) {
+
+  option.addEventListener('click', function() {
+    modalToOpen.style.display = "none";
+
+    let chosenImage = this.querySelector("img").src;
+    let chosenDifficulty = this.querySelector("p");
+    // If the choice is from the difficulty modal box
+    // adjust the frequency of enemy generation as well as the 
+    // speed range of the enemies in accordance to the chosen
+    // difficulty
+    if (chosenDifficulty) {
+      currentDifficulty = chosenDifficulty.textContent;
+      if (currentDifficulty === "INSANE") {
+        generateEnemyPeriod = generateEnemyPeriodInsane;
+        fastestSpeed = fastestSpeedInsane;
+        slowestSpeed = slowestSpeedInsane;
+      }
+      else if (currentDifficulty === "HARD") {
+        generateEnemyPeriod = generateEnemyPeriodHard;
+        fastestSpeed = fastestSpeedHard;
+        slowestSpeed = slowestSpeedHard;
+      }
+      else {
+        generateEnemyPeriod = generateEnemyPeriodEasy;
+        fastestSpeed = fastestSpeedEasy;
+        slowestSpeed = slowestSpeedEasy;
+      }
+
+    } // if the choice is from the icon modal box, set the player
+    // image accordingly
+    else {
+      player.img.src = chosenImage;
+    }
+    // In either case (whether its an icon or difficulty selection modal box),
+    // restart the game
+    mainGameArea.start();
+
+  });
+}
+
 
 
 /* Generate a new player object at the default starting position with the default icon. 
@@ -430,4 +515,3 @@ mainGameArea.generateFixedObjects(0,startOfRowsYPos+heightFixedObject-heightLag,
 // And finally the last 2 rows of grass blocks
 mainGameArea.generateFixedObjects(0,startOfRowsYPos+(5*(heightFixedObject-heightLag)),numFixedObjects,2,widthFixedObject,heightFixedObject,'images/grass-block.png');
 
-mainGameArea.start();
