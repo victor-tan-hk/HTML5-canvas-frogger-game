@@ -52,6 +52,26 @@ class Component {
     updatePos() {
       context.drawImage(this.img, this.xPos, this.yPos, this.width, this.height);
     }
+
+
+  // very basic implementation of collision detection
+  crashWith(otherobj) {
+    const myleft = this.xPos;
+    const myright = this.xPos + (this.width);
+    const mytop = this.yPos;
+    const mybottom = this.yPos + (this.height);
+    const otherleft = otherobj.xPos;
+    const otherright = otherobj.xPos + (otherobj.width);
+    const othertop = otherobj.yPos;
+    const otherbottom = otherobj.yPos + (otherobj.height);
+
+    let crash = false;
+    if ((Math.abs(myleft - otherleft) < (this.width - 10))
+    && Math.abs(othertop - mytop) < 20 ) {
+      crash = true;
+    }
+    return crash;
+  }
   
 }
 
@@ -174,6 +194,14 @@ const mainGameArea = {
       // Finally draw the enemies
       for (let pos = 0; pos < this.enemies.length; pos++) {
         this.enemies[pos].updatePos();
+
+      // If the enemy collides with the player
+      if (this.enemies[pos].crashWith(player)) {
+        console.log("player died");
+        player.resetPosition();        
+      }
+
+
       }    
   },
 
