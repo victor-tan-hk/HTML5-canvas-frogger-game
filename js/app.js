@@ -421,6 +421,19 @@ startButton.addEventListener('click', () => {
   modalToOpen.style.display = "block";
 });
 
+let imageOptions = document.getElementsByClassName("modal-selections");
+
+for (let option of imageOptions) {
+
+  option.addEventListener('click', function() {
+    modalToOpen.style.display = "none";
+
+    let chosenImage = this.querySelector("img").src;
+    player.img.src = chosenImage;
+    mainGameArea.start();
+
+  });
+}
 
 
 
@@ -441,4 +454,3 @@ mainGameArea.generateFixedObjects(0,startOfRowsYPos+heightFixedObject-heightLag,
 // And finally the last 2 rows of grass blocks
 mainGameArea.generateFixedObjects(0,startOfRowsYPos+(5*(heightFixedObject-heightLag)),numFixedObjects,2,widthFixedObject,heightFixedObject,'images/grass-block.png');
 
-mainGameArea.start();
