@@ -5,20 +5,30 @@ const context = canvas.getContext("2d");
 // period for refreshing the game play area
 const refreshPeriod = 50;
 
-// period for generating enemies
-let generateEnemyPeriod = 2000;
+// period for generating random enemies
+// different values for different difficulty levels
+const generateEnemyPeriodEasy = 7000;
+const generateEnemyPeriodHard = 2000;
+const generateEnemyPeriodInsane = 500;
+let generateEnemyPeriod = generateEnemyPeriodEasy;
 
 
 // fastest and slowest enemy speed
-let fastestSpeed = 10;
-let slowestSpeed = 5;
+// different values for different difficulty levels
+const fastestSpeedEasy = 3;
+const slowestSpeedEasy = 1;
+const fastestSpeedHard = 10;
+const slowestSpeedHard = 5;
+const fastestSpeedInsane = 20;
+const slowestSpeedInsane = 10;
+let fastestSpeed = fastestSpeedEasy;
+let slowestSpeed = slowestSpeedEasy;
 
 // default difficult level: EASY
 let currentDifficulty = "EASY";
 
 // period for generating random items (gems, etc)
 const generateItemPeriod = 3000;
-
 
 // constants for generating background icons
 const widthHeightFactor = 1.7;
@@ -435,7 +445,36 @@ for (let option of imageOptions) {
     modalToOpen.style.display = "none";
 
     let chosenImage = this.querySelector("img").src;
-    player.img.src = chosenImage;
+    let chosenDifficulty = this.querySelector("p");
+    // If the choice is from the difficulty modal box
+    // adjust the frequency of enemy generation as well as the 
+    // speed range of the enemies in accordance to the chosen
+    // difficulty
+    if (chosenDifficulty) {
+      currentDifficulty = chosenDifficulty.textContent;
+      if (currentDifficulty === "INSANE") {
+        generateEnemyPeriod = generateEnemyPeriodInsane;
+        fastestSpeed = fastestSpeedInsane;
+        slowestSpeed = slowestSpeedInsane;
+      }
+      else if (currentDifficulty === "HARD") {
+        generateEnemyPeriod = generateEnemyPeriodHard;
+        fastestSpeed = fastestSpeedHard;
+        slowestSpeed = slowestSpeedHard;
+      }
+      else {
+        generateEnemyPeriod = generateEnemyPeriodEasy;
+        fastestSpeed = fastestSpeedEasy;
+        slowestSpeed = slowestSpeedEasy;
+      }
+
+    } // if the choice is from the icon modal box, set the player
+    // image accordingly
+    else {
+      player.img.src = chosenImage;
+    }
+    // In either case (whether its an icon or difficulty selection modal box),
+    // restart the game
     mainGameArea.start();
 
   });
