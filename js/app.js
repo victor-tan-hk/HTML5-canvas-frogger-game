@@ -17,7 +17,7 @@ let slowestSpeed = 5;
 let currentDifficulty = "EASY";
 
 // period for generating random items (gems, etc)
-const generateItemPeriod = 4000;
+const generateItemPeriod = 3000;
 
 
 // constants for generating background icons
@@ -293,6 +293,23 @@ const mainGameArea = {
               setTimeout(() => {player.powerMode = false}, generateItemPeriod);
             }
           }                        
+          // remove all enemies in the game play area
+          // increment the player score by the number of enemies removed
+          else if (currentSpecialItem.itemName == 'Gem Blue') {
+            //verify how many enemies are still in the game play area
+            let enemiesKilled = 0;
+            for (let enemy of this.enemies) {
+              // We dont count an enemy that is outside the game play area
+              // as a "kill"
+              if (enemy.xPos < canvas.width) {
+                enemiesKilled++;
+              }
+            }
+            score += enemiesKilled;
+            this.enemies = [];
+        }
+
+
 
           // remove the item
           currentSpecialItem = null;
