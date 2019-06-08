@@ -264,6 +264,9 @@ const mainGameArea = {
           // Increment lives if it is a heart
           if (currentSpecialItem.itemName == 'Heart')
             lifes++;
+          // Increment score if it is a green gem  
+          else if (currentSpecialItem.itemName == 'Gem Green')
+            score++;            
 
           // remove the item
           currentSpecialItem = null;
