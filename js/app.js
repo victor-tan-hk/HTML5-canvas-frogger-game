@@ -220,11 +220,27 @@ const mainGameArea = {
 
   start : function() {
 
-    // need to bind function before calling as addEventListener and setInterval  
-    // automatically resets this to undefined
+      // need to bind function before calling as addEventListener and setInterval  
+      // automatically resets this to undefined
 
-    let boundPlayerMove = player.move.bind(player);
-    document.addEventListener("keydown", boundPlayerMove, false);
+    // To ensure that there is no subsequent rebinding if game is restarted
+    if (initialStartOfGame) {
+      initialStartOfGame = false;
+      let boundPlayerMove = player.move.bind(player);
+      document.addEventListener("keydown", boundPlayerMove, false);
+    } else {
+      // This is used to reset the relevant game variables and timers
+      // in case the game is restarted in the middle of play
+      if (this.enemies.length > 0)
+        this.enemies = [];
+
+      lifes = 3;
+      score = 0;
+      this.clearAllTimers();
+      player.resetPosition();
+      player.powerMode = false;
+      currentSpecialItem = null;
+    }
 
     // Interval timer for refreshing main game play area
     let boundUpdateGameArea = mainGameArea.updateGameArea.bind(mainGameArea);
