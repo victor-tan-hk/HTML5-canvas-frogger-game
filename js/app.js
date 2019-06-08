@@ -5,6 +5,15 @@ const context = canvas.getContext("2d");
 // period for refreshing the game play area
 const refreshPeriod = 50;
 
+// period for generating enemies
+let generateEnemyPeriod = 2000;
+
+
+// fastest and slowest enemy speed
+let fastestSpeed = 10;
+let slowestSpeed = 5;
+
+
 // constants for generating background icons
 const widthHeightFactor = 1.7;
 const startOfRowsYPos = 50;
@@ -97,6 +106,22 @@ class Player extends Component {
 
 }
 
+/* The Enemy class adds an additional property specific to for its functionality, 
+i.e. to move across to the right. It also makes calls to the base Component class*/
+
+class Enemy extends Component {
+
+  constructor(xPos, yPos, width, height, imgName,xMovement) {
+    super(xPos, yPos, width, height, imgName);
+    this.xMovement = xMovement;
+  }
+  // xMovement is responsible for the enemy movement across to the right
+  updatePos() {
+    super.updatePos();
+    this.xPos += this.xMovement;
+  }
+
+}
 
   /* This is the main object that keeps all the methods and variables relevant for
 game play
@@ -104,7 +129,11 @@ game play
 const mainGameArea = {
 
   updateInterval : null,
+  generateEnemyInterval: null,
+
   stationaryComponents : [],
+  enemies : [],
+
 
 
 /*   The method that starts game play by initializing the appropriate variables
@@ -123,6 +152,9 @@ const mainGameArea = {
     let boundUpdateGameArea = mainGameArea.updateGameArea.bind(mainGameArea);
     this.updateInterval = setInterval(boundUpdateGameArea, refreshPeriod);
 
+    // Interval timer for generating enemies periodically
+    let boundGenerateEnemies = mainGameArea.generateEnemies.bind(mainGameArea);
+    this.generateEnemyInterval = setInterval(boundGenerateEnemies, generateEnemyPeriod);
 
 
 
@@ -138,6 +170,11 @@ const mainGameArea = {
 
         // Next draw the player
       player.updatePos();  
+
+      // Finally draw the enemies
+      for (let pos = 0; pos < this.enemies.length; pos++) {
+        this.enemies[pos].updatePos();
+      }    
   },
 
 
@@ -155,6 +192,15 @@ const mainGameArea = {
         currentXPos = startXPos;
     }
   },
+
+ /*   Randomly generate an enemy on the left of any one of the 4 stony paths
+  Also set it to move right at a random speed */
+  generateEnemies: function() {
+    const randomRow = Math.floor(Math.random() * 4) + 1;  // returns a random integer from 1 to 4
+    const enemySpeed =  Math.floor(Math.random() * (fastestSpeed - slowestSpeed) ) + slowestSpeed;
+    const enemyYPos = startOfRowsYPos+(randomRow *(heightFixedObject-heightLag)) - 10;
+    this.enemies.push(new Enemy(0, enemyYPos, widthFixedObject, heightFixedObject, 'images/enemy-bug.png',enemySpeed));
+  }, 
 
 
   doEndGame: function(msg) {
