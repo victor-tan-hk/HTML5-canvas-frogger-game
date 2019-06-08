@@ -258,6 +258,17 @@ const mainGameArea = {
 
       if (currentSpecialItem) {
         currentSpecialItem.updatePos();
+        // The action to be taken when the player collides with 
+        // a special item depends on the item itself
+        if (currentSpecialItem.crashWith(player)) {
+          // Increment lives if it is a heart
+          if (currentSpecialItem.itemName == 'Heart')
+            lifes++;
+
+          // remove the item
+          currentSpecialItem = null;
+        }
+
       }
 
 
